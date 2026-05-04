@@ -1,8 +1,10 @@
 import yfinance as yf
 from mwviews.api import PageviewsClient
 import pandas as pd
+import pickle
 
 pd.set_option("display.max_columns", 20)
+pd.set_option("display.width", 1000)
 
 tickers = []
 
@@ -29,47 +31,47 @@ for g in groups:
             "en.wikipedia",
             g[1],
             granularity="daily",
-            start="20260223",
+            start="20250502",
             end="20260502",
         )
 
-        weekly_views = {}
-        raw_wiki_df = pd.DataFrame.from_dict(result, orient="index")
-        # print(raw_wiki_df)
-        wiki_df = raw_wiki_df.resample("W-MON").sum()
-
-        # for (
-        #     key,
-        #     value,
-        # ) in result.items():
-        #     week = key.isocalendar()[1]
-
-        #     if week in weekly_views:
-        #         for ticker, views in value.items():
-        #             if ticker in weekly_views[week]:
-        #                 weekly_views[week][ticker] += views
-        #             else:
-        #                 weekly_views[week][ticker] = views
-        #     else:
-        #         weekly_views[week] = value
-
-
-# print(weekly_views)
-
-# print(wiki_df)
+        wiki_df = pd.DataFrame.from_dict(result, orient="index")
 
 raw_stock_df = yf.download(
-    groups[0][0], interval="1wk", start="2026-02-16", end="2026-05-02"
+    groups[0][0], interval="1d", start="2025-05-02", end="2026-05-02"
 )
 
 stock_df = raw_stock_df[["Close"]].copy()
-stock_df = stock_df["Close"].diff()
-# print(stock_df)
-# weekly_stock_df = stock_df.resample("W").sum()
-# print(weekly_stock_df)
-
-# print(raw_stock_df.columns.tolist())
-# df.to_csv("stocks.csv", index=False)
+stock_df = stock_df["Close"]
 
 combined_df = stock_df.join(wiki_df)
-print(combined_df)
+
+
+with open("df.pkl", "wb") as f:
+    pickle.dump(combined_df, f)
+
+
+# combined_df["Visa_z"] = (
+#     combined_df["Visa_Inc."] - combined_df["Visa_Inc."].mean()
+# ) / combined_df["Visa_Inc."].std()
+
+# combined_df["Mastercard_z"] = (
+#     combined_df["Mastercard"] - combined_df["Mastercard"].mean()
+# ) / combined_df["Mastercard"].std()
+
+# combined_df["supposition"] = (
+#     (combined_df["MA"] > combined_df["V"])
+#     & (combined_df["Mastercard"] > combined_df["Visa_Inc."])
+# ) | (
+#     (combined_df["MA"] < combined_df["V"])
+#     & (combined_df["Mastercard"] < combined_df["Visa_Inc."])
+# )
+
+# combined_df["supposition_2"] = (
+#     (combined_df["MA"] > combined_df["V"])
+#     & (combined_df["Mastercard_z"] > combined_df["Visa_z"])
+# ) | (
+#     (combined_df["MA"] < combined_df["V"])
+#     & (combined_df["Mastercard_z"] < combined_df["Visa_z"])
+# )
+# print(combined_df)
